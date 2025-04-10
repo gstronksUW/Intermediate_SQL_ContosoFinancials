@@ -11,4 +11,21 @@ Group by
   orderdate
   ;
 
-  
+
+-- this code is counting the number of customers from each continent then using a "case when"statement to pivot the data in to new columns so that the customer counts are now tabulated horizontally in the table by continent / in order to do this the sales and customer tables were joined as well
+
+select
+  s.orderdate,
+  count(distinct case when c.continent='Europe' then s.customerkey end) as eu_customers,
+  count(distinct case when c.continent='North America' then s.customerkey end) as na_customers,
+  count(distinct case when c.continent='Australia' then s.customerkey end) as au_customers 
+FROM
+  sales s
+Left join customer c on s.customerkey = c.customerkey
+where
+ s.orderdate between '2023-01-01' and '2023-12-31'
+Group by
+  s.orderdate
+Order by 
+  s.orderdate 
+  ;
