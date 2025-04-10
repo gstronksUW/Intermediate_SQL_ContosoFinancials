@@ -1,0 +1,14 @@
+--This code shows the number of distinct customers per day for the year of 2023 / The count (distinct) function is utilized to ensure that each customer is counted once per day regardless of how many orders they had in that same day
+
+select
+  orderdate,
+  count(distinct customerkey) total_customers
+FROM
+  sales
+where
+  orderdate between '2023-01-01' and '2023-12-31'
+Group by
+  orderdate
+  ;
+
+  
