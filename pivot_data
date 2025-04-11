@@ -29,3 +29,21 @@ Group by
 Order by 
   s.orderdate 
   ;
+
+
+
+--This code creates a table that shows the yearly net revenue for each product category using a case when statement to pivot the data in to columns for the yearly totals / This is done using the sum function and nesting the case when statement inside so that each year is separated in to its own column.
+
+select
+  p.categoryname,
+  sum(case when s.orderdate between '2022-01-01' and '2022-12-31' then s.quantity*s.netprice*s.exchangerate else 0 end ) as total_netrevenue_2022,
+  sum(case when s.orderdate between '2023-01-01' and '2023-12-31' then s.quantity*s.netprice*s.exchangerate else 0 end ) as total_netrevenue_2023
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey
+
+Group by
+  p.categoryname
+Order by
+  p.categoryname
+  ;
