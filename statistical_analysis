@@ -1,0 +1,17 @@
+--Using the command Percentile_cont, the median net revneue for sales on each category was determined and pivoted into unique columns using the Case When Statement:
+
+select
+  p.categoryname,
+  PERCENTILE_CONT(.5) within group (order by (
+      case when orderdate between '2022-01-01' and  '2022-12-31'  then (s.quantity*s.netprice*s.exchangerate) end ))  y2022_median_sales,
+  PERCENTILE_CONT(.5) within group (order by (
+      case when orderdate between '2023-01-01' and  '2023-12-31'  then (s.quantity*s.netprice*s.exchangerate) end ))  y2023_median_sales
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey
+
+Group by
+  p.categoryname
+Order by
+  p.categoryname
+  ;
