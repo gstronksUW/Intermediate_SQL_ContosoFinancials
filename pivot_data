@@ -47,3 +47,63 @@ Group by
 Order by
   p.categoryname
   ;
+
+
+
+-- This code pivots and categorizes the sales data by category.  this is done using a case when statement with the sum of the net revenue expression to categorize it by low or high net revenue.  
+-- This is done by comparing the results to the median of the overall data to determine if it is high or low revenue.
+-- A CTE is used to calculate the overall median value and it is inserted in the when statement of each expression.
+
+
+With median_value as (  
+
+select
+  PERCENTILE_CONT(.5) within group (order by (s.quantity*s.netprice*s.exchangerate)) as Median 
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey
+Where
+  orderdate between '2022-01-01' and '2023-12-31'
+
+  )
+
+select
+  p.categoryname as category,
+  sum(case when (s.quantity*s.netprice*s.exchangerate) < mv.median
+    and orderdate between '2022-01-01' and '2022-12-31'
+    then (s.quantity*s.netprice*s.exchangerate) end) as low_net_revenue_2022,
+  sum(case when (s.quantity*s.netprice*s.exchangerate) >= mv.median
+    and orderdate between '2022-01-01' and '2022-12-31'
+    then (s.quantity*s.netprice*s.exchangerate) end) as high_net_revenue_2022,
+  sum(case when (s.quantity*s.netprice*s.exchangerate) < mv.median
+    and orderdate between '2023-01-01' and '2023-12-31'
+    then (s.quantity*s.netprice*s.exchangerate) end) as low_net_revenue_2023,
+  sum(case when (s.quantity*s.netprice*s.exchangerate) >= mv.median
+    and orderdate between '2023-01-01' and '2023-12-31'
+    then (s.quantity*s.netprice*s.exchangerate) end) as high_net_revenue_2023
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey,
+  median_value as mv
+Group by
+  p.categoryname
+Order by
+  p.categoryname
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
