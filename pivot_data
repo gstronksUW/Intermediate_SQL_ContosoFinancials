@@ -94,6 +94,47 @@ Order by
 
 
 
+--This code segments the total revenue in each category in to low, medium, and high level rankings based on if they are below the 25th percentile (low), between the 25th percentile and 75th percentile (medium), 
+--or above the 75th percentile (high).  This is done using mulitple when clauses inside of the case statement to determine the category of each purchase then the total revenue is aggregated.  
+--This again is completed using a CTE to calculate the pecentiles for the data using a "percentile_cont" statement to determine them to use in the main query
+
+With percentiles as (
+select
+  PERCENTILE_CONT(.25) within group (order by (s.quantity*s.netprice*s.exchangerate)) as rev_25th_percentile,
+  PERCENTILE_CONT(.75) within group (order by (s.quantity*s.netprice*s.exchangerate)) as rev_75th_percentile
+
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey
+Where
+  orderdate between '2022-01-01' and '2023-12-31'
+
+)
+
+
+select
+  p.categoryname as category,
+  case 
+    when (s.quantity*s.netprice*s.exchangerate) <= pctl.rev_25th_percentile
+    then '3-Low'
+    when (s.quantity*s.netprice*s.exchangerate) >= pctl.rev_75th_percentile
+    then '1-High'
+    else '2-Medium'
+  end as revenue_tier,
+  sum(s.quantity*s.netprice*s.exchangerate) as total_revenue
+  
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey,
+  percentiles pctl 
+
+Group by 
+  p.categoryname,
+  revenue_tier
+
+Order by 
+    p.categoryname,
+    revenue_tier;
 
 
 
