@@ -1,0 +1,24 @@
+-- This code filters for orders from the last five years.  It does this by extracting the year from the order date and the year from the current year date minus 5 to give us the year five years before the current year.  
+-- A where clause is added so that the only data that appears has the year of the order data greater than or equal to the year that is five years previous to the current year.  
+
+
+select
+  current_date,
+  extract(YEAR from orderdate) as order_year,
+  extract(YEAR from CURRENT_DATE) as current_year,
+  extract(YEAR from CURRENT_DATE) - 5 as minus_five,
+  s.orderdate, 
+  p.categoryname,
+  sum(s.quantity*s.netprice*s.exchangerate) as net_revenue 
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey
+
+where
+  extract(YEAR from orderdate) >= extract(YEAR from CURRENT_DATE) - 5
+Group by
+  s.orderdate,
+  p.categoryname
+Order by
+  p.categoryname
+  ;
