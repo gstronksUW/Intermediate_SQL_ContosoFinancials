@@ -1,0 +1,76 @@
+-- interval between date functions - finding the time between two dates to find the duration
+
+
+
+
+--date and time  analysis datetrunc
+
+
+select
+  orderdate,
+  DATE_TRUNC('month', orderdate) :: date as order_month,
+
+from
+  sales
+Order by
+  Random ()
+  limit 10;
+
+
+
+--date and time  analysis datetrunc
+
+
+select
+  DATE_TRUNC('month', orderdate) :: date as order_month,
+  sum(quantity * netprice * exchangerate) as net_revenue,
+  count(distinct customerkey) as total_unique_customers
+from
+  sales
+Group by
+  order_month
+;
+
+
+-- to_char() example , change the selected expression to format of choice
+
+
+select
+  orderdate,
+  to_char(orderdate, 'yyyy-MM')
+from
+  sales
+order by
+  random()
+;
+
+
+
+
+--date filtering date_part() and extract()
+select
+  date_part('year', orderdate) as order_year,
+  date_part('month', orderdate) as order_month,
+  date_part('day', orderdate) as order_day
+
+from
+  sales
+order by
+  random()
+limit 10
+;
+
+
+-- Using extract insteand of date_part 
+select
+  orderdate,
+  extract(year from orderdate) as order_year,
+  extract(month from orderdate) as order_month,
+  extract(day from orderdate) as order_day
+
+from
+  sales
+order by
+  random()
+limit 10
+;
