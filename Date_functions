@@ -74,3 +74,98 @@ order by
   random()
 limit 10
 ;
+
+
+
+-- dynamic filtering with current date or now()
+
+select
+  current_date,
+  extract(YEAR from orderdate) as order_year,
+  extract(YEAR from CURRENT_DATE) as current_year,
+  extract(YEAR from CURRENT_DATE) - 5 as minus_five,
+  s.orderdate,
+  p.categoryname,
+  sum(s.quantity*s.netprice*s.exchangerate) as net_revenue
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey
+
+where
+  extract(YEAR from orderdate) >= extract(YEAR from CURRENT_DATE) - 5
+Group by
+  s.orderdate,
+  p.categoryname
+Order by
+  p.categoryname
+  ;
+
+
+-- Using the interval function to use as a set interval to compare the time between two dates
+
+select
+  current_date,
+  s.orderdate
+FROM
+  sales s
+  
+where
+  orderdate >= current_date - interval '5 years'
+
+
+  ;
+
+
+
+
+select
+  current_date,
+  extract(YEAR from orderdate) as order_year,
+  extract(YEAR from CURRENT_DATE) as current_year,
+  extract(YEAR from CURRENT_DATE) - 5 as minus_five,
+  s.orderdate,
+  p.categoryname,
+  sum(s.quantity*s.netprice*s.exchangerate) as net_revenue
+FROM
+  sales s
+  left join product p on s.productkey = p.productkey
+
+where
+  orderdate >= current_date - interval '5 years'
+Group by
+  s.orderdate,
+  p.categoryname
+Order by
+  p.categoryname
+  ;
+
+
+
+
+
+-- age() function - this function finds the interval between two dates, the end date has to be the first one listed to get a sensical output
+
+select extract(day from age('2024-01-14','2024-01-08'))-5
+
+
+
+
+--average processing time by year 
+
+select 
+  date_part('year', orderdate) as order_year,
+  round(avg(extract(days from age(deliverydate, orderdate))),2)as processing_time,
+  cast(sum(quantity*netprice*exchangerate)as Integer )as net_revenue
+from  
+  Sales
+where 
+  orderdate >= current_date - interval '5 years'
+group by
+  order_year 
+order by 
+  order_year 
+;
+
+
+
+
