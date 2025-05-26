@@ -1,0 +1,176 @@
+-- Ranking window functions
+
+
+select
+	customerkey,
+	count(*) as total_orders,
+	row_number() over (order by count(*) desc) as total_orders_row_num,
+	rank() over (order by count(*) desc) as total_orders_rank,
+	dense_rank() over (order by count(*) desc) as total_orders_denserank
+from
+	sales
+group by
+	customerkey
+limit 10
+;
+
+
+
+--Lag and Lead functions
+with monthly_revenue as (
+select
+	to_char(orderdate, 'YYYY-MM') as mon,
+	sum(quantity *netprice*exchangerate) as net_revenue
+
+from
+	sales
+where
+	extract(year from orderdate) = 2023
+group by
+	mon
+order by
+	mon
+)
+
+
+select
+mon,
+net_revenue,
+first_value(net_revenue) over(order by mon) as first_month_revenue,
+last_value(net_revenue) over(order by mon rows between unbounded preceding and unbounded following) as last_month_revenue,
+nth_value (net_revenue, 3) over(order by mon) as third_month_value,
+lag(net_revenue,1) over(order by mon) as previous_month_revenue,
+lead(net_revenue,1) over(order by mon) as next_month_revenue
+from 
+	monthly_revenue
+;
+
+
+
+
+-- lead and lag functions
+
+
+
+with monthly_revenue as (
+select
+	to_char(orderdate, 'YYYY-MM') as mon,
+	sum(quantity *netprice*exchangerate) as net_revenue
+
+from
+	sales
+where
+	extract(year from orderdate) = 2023
+group by
+	mon
+order by
+	mon
+)
+
+
+select
+mon,
+net_revenue,
+lag(net_revenue,1) over(order by mon) as previous_month_revenue,
+net_revenue-lag(net_revenue,1) over(order by mon) as monthly_rev_growth,
+round((net_revenue-lag(net_revenue,1) over(order by mon)) / lag(net_revenue,1) over(order by mon) ,2)rev_growth
+from 
+	monthly_revenue
+;
+
+
+
+
+--
+
+
+With yearly_cohort as (
+select
+	customerkey,
+	extract(year from min(orderdate)) as cohort_year,
+	sum(quantity*netprice*exchangerate) as customer_ltv
+from
+	sales
+group by
+	customerkey
+),
+
+cohort_summary as (
+select
+	cohort_year,
+	customerkey,
+	customer_ltv,
+	round(avg(customer_ltv) over (partition by cohort_year),2) as avg_cohort_ltv
+from 
+	yearly_cohort
+order by
+	cohort_year,
+	customerkey
+),
+
+cohort_final as (
+select distinct
+	cohort_year,
+	avg_cohort_ltv
+from
+	cohort_summary
+order by 
+	cohort_year
+)
+
+select 
+	*,
+	lag(avg_cohort_ltv) over (order by cohort_year) as prev_cohort_ltv,
+	round(((avg_cohort_ltv)-lag(avg_cohort_ltv) over (order by cohort_year))/lag(avg_cohort_ltv) over (order by cohort_year)*100,2)as ltv_change
+from 
+	cohort_final
+;
+
+--
+
+--Frame clauses in window functions
+
+--window function over (
+	--partition by 
+	--order by column 
+	--rows between start_frame AND end_frame)
+
+-- 5 options for start and end frame
+	--unbounded preceeding
+	--n preceeding
+	--current row
+	--n following
+	--unbounded following
+--instead of rows you can use:
+	--range 
+	--groups
+
+
+select
+
+from
+
+;
+
+with monthly_sales as (
+select
+	to_char(orderdate, 'YYYY-MM') as mon,
+	sum(quantity *netprice*exchangerate) as net_revenue
+from
+	sales
+where
+	extract(year from orderdate) = 2023
+group by
+	mon
+order by
+	mon
+)
+
+select
+	mon,
+	avg(net_revenue) over (order by mon rows between current row and current row) net_rev_current,
+	avg(net_revenue) over (order by mon rows between 1 preceding and current row) net_rev_current,
+	avg(net_revenue) over (order by mon rows between 1 preceding and 1 following)
+from
+	monthly_sales
+;
