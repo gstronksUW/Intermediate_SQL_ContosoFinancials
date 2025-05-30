@@ -1,0 +1,79 @@
+-- Views - a virtual table for a stored query -- allow you to store a query that you use over 
+--and over again to use 
+
+--this view is a query to find the daily revenue
+create view daily_revenue as
+
+select
+	orderdate,
+	sum(quantity*netprice*exchangerate) as total_revenue
+	
+from
+	sales	
+group by
+	orderdate
+;
+
+
+select *
+from daily_revenue
+;
+
+
+drop view daily_revenue
+;
+
+
+
+
+--this view will allow for analysis of the different cohorts using elements from the sales and customer tables:
+create view cohort_analysis as 
+
+with customer_revenue as (
+select
+	s.customerkey,
+	s.orderdate,
+	sum(s.quantity*s.netprice*s.exchangerate) as total_net_revenue,
+	count(s.orderkey),
+	c.countryfull,
+	c.age,
+	c.givenname,
+	c.surname
+	
+from 
+	sales s
+left join customer c on c.customerkey = s.customerkey
+group by 
+	s.orderdate,
+	c.customerkey,
+	s.customerkey,
+	s.orderdate,
+	c.countryfull,
+	c.age,
+	c.givenname,
+	c.surname
+)
+
+select
+	cr.*,
+	min(orderdate) over (partition by cr.customerkey ) as first_purchase_date,
+	extract(year from min(orderdate) over (partition by cr.customerkey )) as cohort_year
+	
+from
+	customer_revenue cr
+;
+
+
+
+
+
+select
+ cohort_year,
+ round(sum(total_net_revenue),2)
+From
+	cohort_analysis
+Group by 
+	cohort_year
+order by 
+	cohort_year asc
+;
